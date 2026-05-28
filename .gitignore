@@ -1,0 +1,12 @@
+.DS_Store
+.vscode/
+__pycache__/
+*.pyc
+
+# Artefatti generati
+composizioni_generate/
+wav/
+sco/
+*.wav
+*.aif
+*.aiff

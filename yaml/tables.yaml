@@ -1,0 +1,108 @@
+# ==============================================================================
+# Definizione e Mappatura delle Tabelle Csound (v2.0)
+# ==============================================================================
+# Questo file definisce le f-table usate dal compositore.
+# Il sistema leggerà queste definizioni e le scriverà direttamente
+# nello score Csound.
+#
+# Formato di una tabella:
+#   nome_simbolico:
+#     number: (Intero) Il numero della f-table.
+#     size: (Intero) La dimensione della tabella (es. 4096).
+#     gen_routine: (Intero) Il numero della GEN routine di Csound (es. 7 per segmenti lineari).
+#     parameters: (Lista di numeri) I parametri per la GEN routine.
+# ==============================================================================
+
+event_envelopes:
+  lineare:
+    number: 2
+    size: 4096
+    gen_routine: 6
+    parameters: [0.001, 2048, 0.5, 2048, 1]  # Linea retta da 0 a 1
+
+  triangolo:
+    number: 3
+    size: 4096
+    gen_routine: 7
+    parameters: [0, 2048, 1, 2048, 0]  # Linea retta da 0 a 1
+
+  impulsivo-ease:
+    number: 4
+    size: 4096
+    gen_routine: 6
+    # Attacco rapidissimo (in 1/8 della durata), decadimento lento
+    parameters: [0.001, 512, 1, 3584, 0.001]
+
+  impulsivo:
+    number: 5
+    size: 4096
+    gen_routine: 5
+    # Attacco rapidissimo (in 1/8 della durata), decadimento lento
+    parameters: [0.001, 512, 1, 3584, 0.0001]
+
+  lento:
+    number: 6
+    size: 4096
+    gen_routine: 7
+    # Attacco lento (per 3/4 della durata), decadimento più rapido
+    parameters: [0, 3072, 1, 1024, 0]
+
+  sostenuto:
+    number: 7
+    size: 4096
+    gen_routine: 7
+    # Attacco, lungo sustain, decadimento
+    parameters: [0, 512, 1, 3072, 1, 512, 0]
+
+  mega-impulsivo:
+    number: 8
+    size: 4096
+    gen_routine: 5
+    # Attacco rapidissimo (in 1/8 della durata), decadimento lento
+    parameters: [0.001, 128, 1, 2048, 1, 1920, 0.0001]
+
+  impulsivo-fiodena:
+    number: 9
+    size: 4096
+    gen_routine: 5
+    # Attacco rapidissimo (in 1/8 della durata), decadimento lento
+    parameters: [0.001, 128, 1, 3968, 0.0001]
+
+section_envelopes:
+  continua:
+    number: 20
+    size: 4096
+    gen_routine: 7 # GEN10 crea un singolo valore
+    parameters: [1, 4096, 1] # Valore costante a 1 (neutro)
+
+  crescendo_lento:
+    number: 21
+    size: 4096
+    gen_routine: 7
+    parameters: [0, 4096, 1]
+
+  diminuendo_rapido:
+    number: 22
+    size: 4096
+    gen_routine: 7
+    parameters: [1, 4096, 0]
+    
+  plateau_forte:
+    number: 23
+    size: 4096
+    gen_routine: 10
+    parameters: [1]
+
+  crescendo_diminuendo:
+    number: 24
+    size: 4096
+    gen_routine: 7
+    # Sale a 1 a metà, poi scende a 0
+    parameters: [0, 2048, 1, 2048, 0]
+
+  impulso:
+    number: 25
+    size: 4096
+    gen_routine: 6
+    # Sale a 1 a metà, poi scende a 0
+    parameters: [1, 4096, 0.001]

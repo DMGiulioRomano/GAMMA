@@ -1,0 +1,294 @@
+# ==============================================================================
+# GUIDA COMPLETA AL COMPOSITORE GENERATIVO (v3.0)
+# ==============================================================================
+# Questo file serve sia come documentazione completa che come template per la
+# creazione di partiture complesse.
+#
+# La filosofia del sistema è basata su "maschere di tendenza": invece di
+# definire valori fissi, si definiscono gli spazi di possibilità da cui il
+# sistema genera i parametri sonori in modo stocastico.
+
+################################################################################
+# 1. STRUTTURA DI BASE DI UNA COMPOSIZIONE
+################################################################################
+
+# Una composizione è una lista di "sezioni". Ogni sezione, introdotta da un
+# trattino (-), è un blocco temporale della musica. Le sezioni vengono eseguite
+# in sequenza, ma possono avere offset per creare pause o sovrapposizioni.
+#
+# Ogni sezione contiene uno o più "layer" sonori. Un layer è un flusso di
+# eventi sonori parallelo e indipendente, con una propria identità e una
+# propria evoluzione.
+#
+# La gerarchia è: Composizione -> Lista di Sezioni -> Lista di Layer per Sezione
+
+# ------------------------------------------------------------------------------
+# Esempio di struttura minima di una sezione con un layer:
+# ------------------------------------------------------------------------------
+-
+    # --- A. Parametri a livello di SEZIONE (contesto generale) ---
+    nome_sezione: "Nome della Sezione"
+    durata: 60  # Durata in secondi
+
+    # --- B. Lista dei LAYER (flussi sonori paralleli) ---
+    layers:
+      - # --- C. Parametri a livello di LAYER (identità del flusso) ---
+        nome_layer: "Nome del Layer"
+        num_attivazioni: 50
+        timing_model: { type: lineare }
+        # Controlla quando il layer è attivo all'interno della sezione (0.0 -> 1.0)
+        lifespan: [0.0, 0.8] # Questo layer si ferma all'80% della durata della sezione.
+
+        # --- D. Maschera di Tendenza (il "DNA" sonoro del layer) ---
+        stato_unico:
+            # ... qui vengono definiti i parametri sonori ...
+            ottava: { range: [4, 5] }
+            durata_armonica: { range: [1.0, 2.0] }
+
+
+################################################################################
+# 2. DIZIONARIO DEI PARAMETRI
+################################################################################
+
+# Questa sezione è una guida di riferimento per ogni parametro disponibile.
+# Per ogni parametro vengono spiegate le modalità d'uso e il suo comportamento
+# di default se viene omesso.
+
+# ==============================================================================
+# 2.1 PARAMETRI DI SEZIONE
+# ==============================================================================
+-
+    nome_sezione: "Riferimento Parametri di Sezione"
+    durata: 60 # (Numero, Obbligatorio) Durata di base in secondi.
+
+    ratio_temporale: 1.0
+    # (Numero, Opzionale) Fattore di scala per la durata della sezione. Utile per
+    # "stirare" (> 1) o "comprimere" (< 1) la sezione. Default: 1.0
+
+    offset_inizio: 0.0
+    # (Numero, Opzionale) Introduce una pausa (se > 0) o una sovrapposizione (se < 0)
+    # in secondi rispetto alla fine della sezione precedente. Default: 0.0
+
+    inviluppo_sezione: 'continua'
+    # (Stringa, Opzionale) Applica una curva di ampiezza globale a tutti i suoni
+    # della sezione. I nomi disponibili sono definiti nel file `yaml/tables.yaml`.
+    # Default: 'continua' (un valore costante a 1, che non altera il volume).
+
+
+# ==============================================================================
+# 2.2 PARAMETRI DI LAYER
+# ==============================================================================
+    layers:
+      -
+        nome_layer: "Riferimento Parametri di Layer"
+
+        num_attivazioni: 10
+        # (Intero, Opzionale) Il numero di "impulsi" che generano suoni. Controlla
+        # la densità generale del layer. Default: 10
+
+        timing_model: { type: lineare }
+        # (Dizionario, Opzionale) Definisce COME vengono distribuiti nel tempo gli
+        # impulsi. Default: { type: lineare }.
+        # Tipi disponibili: 'lineare', 'stochastic', 'ritardando', 'accelerando', 'breakpoint'.
+        # Per 'ritardando'/'accelerando', si può aggiungere 'shape: <numero>'.
+        # Vedi Sezione 3.2 per il tipo 'breakpoint'.
+
+        lifespan: [0.0, 1.0]
+        # (Lista di 2 numeri, Opzionale) Definisce il ciclo di vita del layer come
+        # frazione della durata della sezione [inizio, fine]. Utile per ingressi
+        # e uscite scaglionate. Default: [0.0, 1.0] (attivo per tutta la sezione).
+
+        leeway_fine_layer: 0.0
+        # (Numero, Opzionale) Aggiunge un "margine di manovra" in secondi alla fine
+        # del lifespan, permettendo agli ultimi eventi di "sfumare" in modo più
+        # naturale senza essere tagliati bruscamente. Default: 0.0
+
+        usa_safety_buffer: true
+        # (Booleano, Opzionale) Se `true`, il motore accorcia la finestra di
+        # generazione degli eventi per evitare che l'ultimo suono "sbordi" nella
+        # sezione successiva. Impostare a `false` per legature tra sezioni. Default: true
+
+        solo: false
+        # (Booleano, Opzionale) Se impostato a `true` in almeno un layer, il motore
+        # genererà e renderizzerà *esclusivamente* i layer con questo flag.
+        # Fondamentale per il debug di parti isolate. Default: false.
+
+        veteranMode: false
+        # (Booleano, Opzionale) Un flag di rendering persistente. Se attivo,
+        # il motore può essere eseguito in modalità "veteran" per aggiornare
+        # solo i layer contrassegnati, lasciando gli altri intatti dalla cache.
+        # Utile per lavori complessi. Default: false.
+
+
+# ==============================================================================
+# 2.3 PARAMETRI DELLE MASCHERE DI TENDENZA
+# ==============================================================================
+# Questi parametri vivono dentro 'stato_unico' o 'stato_iniziale'/'stato_finale'.
+# Per ognuno, sono disponibili diverse MODALITÀ DI GENERAZIONE:
+
+# --- MODALITÀ DI GENERAZIONE ---
+# 1. RANGE: Sceglie un valore casuale in un intervallo.
+#    - { range: [min, max] } -> Distribuzione uniforme.
+# 2. CHOICES: Sceglie un valore da una lista predefinita.
+#    - { choices: [A, B, C] } -> Scelta uniforme.
+#    - { choices: [A, B, C], weights: [0.7, 0.2, 0.1] } -> Scelta pesata.
+# 3. VALUE: Forza un valore fisso, senza casualità.
+#    - { value: X }
+# 4. MEAN/STD: Genera un valore da una distribuzione normale pura.
+#    - { mean: M, std: S }
+
+        stato_unico:
+            # --- Parametri di Altezza e Glissando ---
+            ottava: { range: [3, 6] }
+              # (Range: 0-10, Opzionale) Controlla l'altezza di PARTENZA. Default: 5
+            registro: { range: [10, 40] }
+              # (Range: 1-50, Opzionale) Posizione fine di PARTENZA. Default: 5
+
+            # Parametri per definire un glissando. Gerarchia di priorità:
+            # 1. Offset (se presente)
+            # 2. Assoluto (se presente e non c'è offset)
+            # 3. Statico (se non c'è nessuno dei due, il suono non ha glissando)
+            offset_ottava: { range: [-1, 1] }
+              # (Numero, Opzionale) Variazione di ottava da sommare alla nota di partenza.
+            offset_registro: { range: [-10, 10] }
+              # (Numero, Opzionale) Variazione di registro da sommare alla nota di partenza.
+            ottava_arrivo: { value: 9 }
+              # (Numero, Opzionale) Ottava assoluta di destinazione.
+            registro_arrivo: { value: 1 }
+              # (Numero, Opzionale) Registro assoluto di destinazione.
+
+            # --- Parametri di Dinamica e Durata ---
+            dinamica: { choices: ['p', 'mf', 'f'], weights: [0.2, 0.5, 0.3] }
+              # (Stringa, Opzionale) Intensità. Choices: 'ppp'...'fff'. Default: 'mf'
+            durata_armonica: { range: [1.0, 3.0] }
+              # (Numero, Obbligatorio) Durata di base per la generazione ritmica. DEVE essere specificata.
+            moltiplicatore_durata: { choices: [1.0, 2.0, 4.0] }
+              # (Numero, Opzionale) Fattore di sovrapposizione. >1 crea legature.
+              # Default: scelta casuale tra [1, 1.25, 1.6].
+
+            # --- Parametri di Texture e Ritmo ---
+            densita_cluster: { range: [1, 3] }
+              # (Intero, Opzionale) Quanti suoni per ogni impulso. Default: 1
+            tipo_ritmi: { explicit_values: [3, 5, 2, 8] }
+              # (Dizionario, Opzionale) Pattern ritmico interno. Default: { choices: ['medi'] }
+              # Modalità 1: Categorie -> choices: ['piccoli', 'medi', 'grandi', 'misti']
+              # Modalità 2: Lista fissa -> explicit_values: [7, 5, 12]
+              # Modalità 3: Scelta tra liste -> choices: [[2,3], [5,8]], weights: [0.5, 0.5]
+            nonlinear_mode: { value: 1 }
+              # (Intero, Opzionale) Comportamento gen. ritmico. Choices: 0-3. Default: 3
+            onset_jitter: { range: [0.0, 0.01] }
+              # (Numero, Opzionale) "Sbavatura" temporale degli eventi (dev. std). Default: 0.05
+
+            # --- Parametri di Timbro e Spazializzazione ---
+            inviluppo_attacco: { choices: ['impulsivo', 'lento'] }
+              # (Stringa, Opzionale) Forma del singolo suono. I nomi sono definiti
+              # in `yaml/tables.yaml`. Default: 'lineare'
+            senso_movimento: { value: -1 }
+              # (Intero, Opzionale) Direzione movimento spaziale (1 o -1). Default: 1
+
+
+################################################################################
+# 3. MECCANISMI AVANZATI
+################################################################################
+
+# ------------------------------------------------------------------------------
+# 3.1 INTERPOLAZIONE DELLE MASCHERE (Layer Dinamici)
+# ------------------------------------------------------------------------------
+# Se un layer definisce 'stato_iniziale' e 'stato_finale', i suoi parametri evolvono.
+
+# Comportamento dell'interpolazione:
+# - Per 'range', 'mean', 'std': I valori numerici vengono interpolati linearmente.
+# - Per 'choices': I 'weights' (pesi) vengono interpolati con cross-fade.
+#   (Funziona solo se la lista 'choices' è identica nei due stati).
+# - Per 'dinamica': Anche valori fissi (es. da 'p' a 'f') vengono interpolati
+#   in modo fluido, poiché convertiti internamente in un indice numerico.
+# - Per 'value' (stringhe): Cambio netto a metà del percorso.
+# - ROBUSTEZZA: Se un parametro è definito solo in uno stato, la sua maschera
+#   viene usata per l'intera durata (non genera errore).
+
+# ------------------------------------------------------------------------------
+# 3.2 TIMING MODEL A BREAKPOINT
+# ------------------------------------------------------------------------------
+# Il timing model 'breakpoint' offre un controllo preciso sulla progressione
+# temporale, definendo una curva a tratti.
+#
+# timing_model:
+#   type: breakpoint
+#   points:
+#     - [t_norm, v_prog, shape_curva]
+#
+# - t_norm: Posizione normalizzata nella durata del layer (0.0-1.0).
+# - v_prog: Valore di progressione degli eventi da raggiungere (0.0-1.0).
+# - shape_curva: (Opzionale) Esponente che modella la curva *del segmento precedente*.
+#
+# Esempio: points: [[0.0, 0.0], [0.8, 1.0, 0.4]]
+#   - Nell'80% della durata (t da 0.0 a 0.8), viene generato il 100% degli eventi (v da 0.0 a 1.0).
+#   - La curva ha shape 0.4 (ease-out): gli eventi si concentrano all'inizio del segmento.
+#   - Nell'ultimo 20% della durata (da 0.8 a 1.0), non accade nulla.
+
+# ------------------------------------------------------------------------------
+# 3.3 CONCETTI ARCHITETTURALI
+# ------------------------------------------------------------------------------
+# - **Disaccoppiamento tramite `tables.yaml`**: I parametri `inviluppo_attacco`
+#   e `inviluppo_sezione` non sono nomi fissi, ma fanno riferimento a
+#   definizioni personalizzate nel file `yaml/tables.yaml`. Questo permette di
+#   creare e usare un numero illimitato di inviluppi senza modificare il codice.
+#
+# - **Debugging con `solo: true`**: Aggiungere questo flag a uno o più layer
+#   è il modo più efficace per isolare una parte e ascoltarla/visualizzarla
+#   in modo indipendente dal resto della composizione.
+
+
+################################################################################
+# 4. ESEMPI PRATICI
+################################################################################
+
+# --- Esempio 1: Sezione Polifonica Complessa con Glissando e Lifespan ---
+-
+    nome_sezione: "I. Contrappunto di Texture Evolutive"
+    durata: 45
+    inviluppo_sezione: 'crescendo_diminuendo'
+    layers:
+      - nome_layer: "Drone Ascendente Basso e Lento"
+        num_attivazioni: 20
+        timing_model: { type: "ritardando", shape: 2.0 }
+        stato_iniziale:
+          ottava: { range: [0, 1] }
+          registro: { range: [1, 10] }
+          dinamica: { value: 'p' }
+          durata_armonica: { range: [7, 10] }
+          inviluppo_attacco: { value: 'lento' }
+          offset_ottava: { value: 0 } # Inizia senza glissando
+        stato_finale:
+          ottava: { range: [1, 2] }
+          registro: { range: [5, 20] }
+          dinamica: { value: 'mf' }
+          durata_armonica: { range: [5, 8] }
+          offset_ottava: { value: 1.5 } # Finisce con un glissando ascendente
+
+      - nome_layer: "Scintillii Acuti (solo seconda metà)"
+        num_attivazioni: 120
+        lifespan: [0.5, 1.0] # Entra a metà sezione
+        leeway_fine_layer: 2.0 # Permette di sfumare per 2s extra
+        timing_model: { type: "stochastic" }
+        stato_unico:
+          ottava: { mean: 9, std: 1.0 }
+          dinamica: { choices: ['ppp', 'pp'], weights: [0.8, 0.2] }
+          durata_armonica: { range: [0.2, 0.8] }
+          inviluppo_attacco: { value: 'impulsivo' }
+          onset_jitter: { range: [0.0, 0.1] }
+
+# --- Esempio 2: Sezione "vecchio stile" per retrocompatibilità ---
+# Se il blocco 'layers:' è omesso, l'intera sezione viene trattata come un singolo layer.
+-
+    nome_sezione: "II. Stasi Ritmica (Senza Layer)"
+    durata: 30
+    offset_inizio: 5.0 # Inizia 5 secondi dopo la fine della sezione precedente
+    num_attivazioni: 80
+    timing_model: { type: "lineare" }
+    stato_unico:
+        ottava: { value: 5 }
+        registro: { range: [10, 40] }
+        durata_armonica: { value: 1.0 }
+        tipo_ritmi: { explicit_values: [4, 3, 5] }
+        nonlinear_mode: { value: 1 } # Periodico
