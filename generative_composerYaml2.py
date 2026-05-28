@@ -12,9 +12,10 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import seaborn as sns
 import yaml
-import subprocess 
+import subprocess
 import re
 import json
+import wave
 
 OTTAVE_RANGE = (0, 10)
 REGISTRI_RANGE = (1, 50)
@@ -1420,6 +1421,17 @@ def run_csound_process(csd_path, process_name, log_dir):
         print(f"    - ERRORE CRITICO nel lanciare Csound per {process_name}: {e}")
         return None
 
+def _get_wav_duration(path):
+    """Durata in secondi del WAV. Csound emette PCM 32-bit float
+    (fmt tag 3), che la stdlib `wave` rifiuta — usiamo `soxi -D`."""
+    try:
+        with wave.open(str(path), 'rb') as w:
+            return w.getnframes() / w.getframerate()
+    except (wave.Error, EOFError):
+        out = subprocess.check_output(['soxi', '-D', str(path)], text=True)
+        return float(out.strip())
+
+
 def generate_assembler_csd(csd_path, output_wav_path, input_files_with_onsets, title="Assembler"):
     score_lines = ""
     for file_path, onset in input_files_with_onsets:
@@ -1428,7 +1440,11 @@ def generate_assembler_csd(csd_path, output_wav_path, input_files_with_onsets, t
         except ValueError:
             relative_path = file_path
 
-        score_lines += f'i "orchestrator" {onset:.4f} [60*8-{onset:.4f}] "{relative_path}"\n'
+        # p3 dell'orchestrator = durata reale del file. Prima era hardcoded
+        # a `60*8 - onset` (8 minuti totali) che gonfiava ogni assemblaggio
+        # con silenzio fino a 480s indipendentemente dal contenuto.
+        file_dur = _get_wav_duration(file_path)
+        score_lines += f'i "orchestrator" {onset:.4f} {file_dur:.4f} "{relative_path}"\n'
     template = f"""<CsoundSynthesizer>
 <CsOptions>
 -o "{output_wav_path}" -W -d -m0
