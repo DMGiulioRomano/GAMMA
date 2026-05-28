@@ -40,7 +40,7 @@ make clean                  # rimuove composizioni_generate/ e sco/
 - [generative_composerYaml2.py](generative_composerYaml2.py) — classi: `GenerativeComposer` (genera), `TimeScheduler` (timing), `CompositionDebugger` (plot PDF). Funzioni assemblaggio: `plan_render_jobs`, `execute_layer_rendering_and_collect_data`, `execute_section_assembly`, `execute_final_assembly`.
 - [yaml/guida.yaml](yaml/guida.yaml) — documentazione canonica dei parametri (commenti inline). **Fonte di verità per la sintassi YAML.**
 - [yaml/tables.yaml](yaml/tables.yaml) — tabelle (inviluppi, dinamiche, ritmi).
-- [yaml/Gamma.yaml](yaml/Gamma.yaml), `Beta.yaml`, `Beta2.yaml` — partiture concrete.
+- [yaml/Gamma.yaml](yaml/Gamma.yaml) — partitura concreta (opera per CIM 2026).
 - [includes/](includes/) — DSP Csound riusabile.
 
 ### Gerarchia concettuale
