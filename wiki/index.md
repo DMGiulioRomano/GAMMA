@@ -20,7 +20,15 @@ _(da popolare via ingest)_
 
 ## Includes Csound
 
-_(da popolare via ingest)_
+### Strumenti (`.orc`)
+- [eventoSonoro](includes/eventoSonoro.md) — singolo evento, glissando esponenziale, ampiezza isofonica k-rate, Mid/Side stereo.
+- [voce](includes/voce.md) — generatore eventi di layer con dynamics index, glissando ottava/registro, inviluppo di sezione, safety buffer.
+- [initIsoAmp](includes/initIsoAmp.md) — calibrazione dinamica centralizzata + UDO `GetIsoAmp`/`GetIsoAmp_k` con curva ISO 226:2003.
+
+### UDO (`.udo`)
+- [GenPythagFreqs](includes/GenPythagFreqs.md) — genera tabella di frequenze pitagoriche (catena di quinte) replicata su N ottave.
+- [NonlinearFunc](includes/NonlinearFunc.md) — generatore ritmi caotici/periodici, 4 modi (convergente, periodico, caotico, caos vero).
+- [pfield_comp](includes/pfield_comp.md) — `calcFrequenza`: mappa (ottava, registro, ritmo) → Hz via `gi_Intonazione`.
 
 ## Python
 
