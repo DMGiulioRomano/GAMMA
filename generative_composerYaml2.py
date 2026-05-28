@@ -857,8 +857,11 @@ class GenerativeComposer:
             
         template = self.get_csd_template()
         
-        # NUOVA RIGA: calcola il percorso assoluto della cartella includes
-        includes_path = self.base_path / "includes"
+        # Path relativo da csd_file_path a includes/ — repo portable
+        import os
+        csd_dir = Path(csd_file_path).parent.resolve()
+        includes_abs = (self.base_path / "includes").resolve()
+        includes_path = os.path.relpath(includes_abs, csd_dir)
         
         csd_content = template.format(
             wav_file_path=wav_file_path,
