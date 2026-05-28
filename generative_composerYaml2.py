@@ -905,7 +905,6 @@ gi_Intonazione ftgen 0, 0, $OTTAVE*$INTERVALLI+1, -2, 0
 
 gi_debug init 1
 
-#include "{includes_path}/gamma_utils.udo"
 #include "{includes_path}/pfield_comp.udo"
 #include "{includes_path}/NonlinearFunc.udo"
 #include "{includes_path}/GenPythagFreqs.udo"
