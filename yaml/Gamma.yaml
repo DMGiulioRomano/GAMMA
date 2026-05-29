@@ -203,7 +203,7 @@
 ---
 
 
--   nome_sezione: "III. "
+-   nome_sezione: "III. Dalle nubi allo sciame"
     offset_inizio: -15
     durata: 60
     ratio_temporale: 1 #.3  
@@ -267,12 +267,12 @@
             tipo_ritmi:       {choices: ['piccoli', 'medi'], weights: [0.8, 0.2]}
             densita_cluster: { range: [5, 10] }          
 
--   nome_sezione: "IV. Te rompo rculo"
+-   nome_sezione: "IV. Rottura"
     durata: 80
     offset_inizio: -60
     ratio_temporale: 1 #.3  
     layers: 
-      - nome_layer: "pinuzzo"
+      - nome_layer: "impulso"
         num_attivazioni: 13
         timing_model:
             type: "accelerando"
@@ -295,7 +295,7 @@
             densita_cluster:  {range: [5, 10]}
             tipo_ritmi:       {choices: ['medi', 'piccoli'], weights: [0.2, 0.8]}
             nonlinear_mode:   {choices: [1, 2], weights: [0.4, 0.6]}
-      - nome_layer: "pinuzzo"
+      - nome_layer: "impulso grave"
         lifespan: [.7,1]
         num_attivazioni: 4
         timing_model:
@@ -321,7 +321,7 @@
             nonlinear_mode:   {choices: [1, 2], weights: [0.4, 0.6]}
 
 
--   nome_sezione: "V. "
+-   nome_sezione: "V. Cluster"
     offset_inizio: -0.3
     durata: 50
     ratio_temporale: 1 #.3  
@@ -346,7 +346,7 @@
             tipo_ritmi:  
               explicit_values: [1,2,1]
 
--   nome_sezione: "VI. "
+-   nome_sezione: "VI. Ultra glissando"
     offset_inizio: -30
     durata: 110
     ratio_temporale: 1 #.3  
